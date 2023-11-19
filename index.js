@@ -1,24 +1,13 @@
 const exp = require("express")
 const app = exp()
-const port = 5000
-var bodyParser = require('body-parser')
-const formData = require('express-form-data');
+const port = 5000 //assign 
+var bodyParser = require('body-parser') //backend data (json)
+const formData = require('express-form-data'); //
+const mainRouter = require("./Router/mainRouter")
 
-app.use(formData.parse());
-app.use(bodyParser.urlencoded({}))
+
 app.use(bodyParser.json())
-
-app.get("/", (req, res) => {
-
-    res.send("Hello world")
-})
-app.post("/", (req, res) => {
-    console.log(req.files)
-    res.send("req.body")
-
-})
-
-
+app.use(mainRouter)
 
 //port assign 
 app.listen(port, () => {
