@@ -4,6 +4,8 @@ const router = exp.Router()
 const userController = require('../Controller/userController')
 
 router.post("/signup",userController.userCreate )
+router.post("/verify-otp",userController.verifyOtp )
+
 router.post("/signin",userController.signup )
 
 

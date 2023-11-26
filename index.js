@@ -5,7 +5,7 @@ var bodyParser = require('body-parser') //backend data (json)
 const formData = require('express-form-data'); //
 const mainRouter = require("./Router/mainRouter")
 const mongoose = require("mongoose")
-require("dotenv").config()
+require("dotenv").config() //ENV =>SMTP=>PORT 
 
 const dbUrl = process.env.ConnectString
 mongoose.connect(dbUrl)
@@ -23,7 +23,7 @@ db.on("error",()=>{
 
 
 app.use(bodyParser.json())
-app.use(mainRouter)
+app.use(mainRouter) //ROUTER
 
 //port assign 
 app.listen(port, () => {
