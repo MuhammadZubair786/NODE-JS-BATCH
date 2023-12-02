@@ -2,7 +2,7 @@ const exp = require("express")
 const app = exp()
 const port = 5000 //assign 
 var bodyParser = require('body-parser') //backend data (json)
-const formData = require('express-form-data'); //
+// const formData = require('express-form-data'); //
 const mainRouter = require("./Router/mainRouter")
 const mongoose = require("mongoose")
 require("dotenv").config() //ENV =>SMTP=>PORT 
@@ -21,7 +21,7 @@ db.on("error",()=>{
 })
 
 
-
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
 app.use(mainRouter) //ROUTER
 

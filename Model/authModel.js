@@ -27,6 +27,15 @@ const authSchema  =new  mongoose.Schema({
         type:Number,
         required:true
 
+    },
+    completeProfile:{
+        type:Boolean,
+        default : false
+
+    },
+    profileId: {
+        type:mongoose.Schema.Types.ObjectId,
+        ref : "Profile" 
     }
 })
 
