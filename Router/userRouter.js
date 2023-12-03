@@ -4,7 +4,7 @@ const router = exp.Router()
 const userController = require('../Controller/userController')
 const multer = require("multer")
 
-
+//for store image in uploads folders
 const storage = multer.diskStorage({
     destination:function(req,file,cb){
         cb(null,"uploads/")
@@ -23,7 +23,7 @@ router.post("/verify-otp",userController.verifyOtp )
 router.post("/complete-profile",upload.single("Image"),userController.completeProfile )
 
 
-router.post("/signin",userController.signup )
+router.post("/login",userController.login )
 
 
 

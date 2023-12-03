@@ -16,7 +16,6 @@ exports.userCreate = async (req, res) => {
 
         const { email, password } = req.body  //desctructing
 
-
         let checkEmail = await userModel.findOne({ email })
         if (checkEmail) {
             return res.status(201).json({
@@ -178,43 +177,46 @@ exports.completeProfile = async (req, res) => {
                 console.log(decode)
                 req.userId = decode.user_id
 
-                var user = await  authModel.findById(req.userId)
+                var user = await authModel.findById(req.userId)
 
-                if(user.completeProfile==false){
-                      await profileValidate.validateAsync(req.body)
+                if (user.completeProfile == false) {
+                    await profileValidate.validateAsync(req.body)
 
-                var obj = {
-                    gender: req.body.gender,
-                    contactNo: req.body.contactNo,
-                    address: req.body.address,
-                    Image: req.file.path,
-                    authId:req.userId
+                    var obj = {
+                        gender: req.body.gender,
+                        contactNo: req.body.contactNo,
+                        address: req.body.address,
+                        Image: req.file.path,
+                        authId: req.userId
+                    }
+
+                    var userProfile = profileModel(obj)
+                    await userProfile.save()
+
+
+
+                    await authModel.findByIdAndUpdate(req.userId, {
+                        completeProfile: true,
+                        profileId: userProfile._id
+
+                        // profileId:
+
+                    })
+                    return res.status(200).json({
+                        message: "profile update",
+                        // data: obj
+
+                    })
                 }
-
-                var userProfile = profileModel(obj)
-                await userProfile.save()
-                console.log(userProfile)
-
-                await  authModel.findByIdAndUpdate(req.userId,{
-                    completeProfile :true,
-                    // profileId:
-
-                })
-                return res.status(200).json({
-                    message: "profile update",
-                    // data: obj
-
-                })
-                }
-                else{
+                else {
                     return res.status(200).json({
                         message: "already complete profile",
                         // data: obj
-    
+
                     })
                 }
 
-              
+
             }
 
         })
@@ -235,21 +237,68 @@ exports.completeProfile = async (req, res) => {
 
 }
 
-exports.signup = async (req, res) => {
-    try {
-        await userValidate.validateAsync(req.body)
+exports.login = async (req, res) => {
+
+        let { body } = req
+        var { email, password } = body
+        if (email == undefined || password == undefined) {
+            return res.status(409).json({
+                message: "Enter All Required Field (Email,Password)",
+                status: false
+            });
+        }
+        else {
+            var checkEmail = await authModel.findOne({ email,password }).populate("profileId")
+            if (checkEmail) {
+                var checkpassword =await  bcrypt.compare(password,checkEmail.password)
+                console.log(checkpassword)
+                if(checkpassword){
+                    if(checkEmail.isVerify==false){
+                        return res.status(200).json({
+                            message: "plz verify your account",
+                            data: checkEmail
+                        });
+    
+                    }
+                    else{
+                        return res.status(200).json({
+                            message: "get user",
+                            data: checkEmail
+                        });  
+                    }
+                    
+                }
+                else{
+                    return res.status(400).json({
+                        message: "Incorrect password",
+                        // data: checkEmail
+                    });
+                }
+                
+
+            }
+            else{
+                return res.status(404).json({
+                    message: "user not found",
+                    
+                });
+            }
+
+
+        }
+
 
         // console.log(req.body)
 
         res.send("Hello test")
-    }
-    catch (e) {
-        return res.status(500).json({
-            message: "Internal server error",
-            error: e
-        });
+    // }
+    // catch (e) {
+    //     return res.status(500).json({
+    //         message: "Internal server error",
+    //         error: e
+    //     });
 
-    }
+    // }
 }
 
 
