@@ -22,7 +22,7 @@ router.post("/signup",userController.userCreate )
 router.post("/verify-otp",userController.verifyOtp )
 router.post("/complete-profile",upload.single("Image"),userController.completeProfile )
 
-
+router.post("/forgot-password",userController.fortgotPasssword)
 router.post("/login",userController.login )
 
 

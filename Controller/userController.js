@@ -7,6 +7,7 @@ const nodemailer = require("nodemailer");
 const profileValidate = require("../Validator/validateProfile");
 const profileModel = require("../Model/profileModel");
 const authModel = require("../Model/authModel");
+const { sendEmail } = require("../constants/sendEmailOtp");
 
 const secret_key = process.env.secret_key
 
@@ -36,42 +37,8 @@ exports.userCreate = async (req, res) => {
             const user = userModel(req.body) //PROVIDEA DATA TO MODEL
             await user.save()
 
-            console.log(secret_key)
             const token = jWT.sign({ user_id: user._id }, secret_key, { expiresIn: "2h" })
-
-
-            const transporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                    user: process.env.smtpemail,
-                    pass: process.env.smtppasskey,
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-
-            })
-
-            const info = {
-                from: process.env.smtpemail,
-                to: email,
-                subject: "Welcome to SMIT MAIL SERVICE",
-                html: `
-                <h1>Verify Account</h1>
-                <p>your otp is : ${otp}</p>   
-                `
-
-            }
-
-            transporter.sendMail(info, (err, result) => {
-                if (err) {
-                    console.log(err)
-                }
-                else {
-
-                }
-            })
-
+            sendEmail("create Account", email, otp)
             return res.status(201).json({
                 message: "User Crteated ",
                 data: user,
@@ -91,68 +58,134 @@ exports.userCreate = async (req, res) => {
 }
 
 exports.verifyOtp = async (req, res) => {
-    try {
-        const { body, headers } = req
-        const { authorization } = headers
-        const { otp } = body
-        if (!authorization) {
-            return res.status(401).json({
-                message: "token not provide"
-            })
+
+    const { body, headers } = req
+    const { authorization } = headers
+    const { otp, otp_type } = body
+    if (!authorization) {
+        return res.status(401).json({
+            message: "token not provide"
+        })
+    }
+    else {
+        if (otp_type != null && otp_type == "verify_Account" || otp_type == "forgot_password") {
+            if (otp_type == "verify_Account") {
+                if (otp == undefined) {
+                    return res.status(401).json({
+                        message: "otp not provide"
+                    })
+                }
+                else if (otp.length != 6) {
+                    return res.status(401).json({
+                        message: "Otp must be 6 letter"
+                    })
+                }
+                else {
+                    jWT.verify(authorization, secret_key, async (err, decode) => {
+                        if (err) {
+                            return res.status(401).json({
+                                message: "unauthorization"
+                            })
+                        }
+                        console.log(decode)
+                        req.userid = decode.user_id
+                        var userFind = await userModel.findById(req.userid)
+                        console.log(userFind)
+                        if (userFind.otp == otp) {
+                            await userFind.updateOne({
+                                isVerify: true
+                            })
+                            const token = jWT.sign({ user_id: req.userid }, secret_key, { expiresIn: "2h" })
+                            return res.status(200).json({
+                                message: "verify otp ",
+                                token
+                            })
+                        }
+                        else {
+                            return res.status(401).json({
+                                message: "invalid otp"
+                            })
+                        }
+
+                    })
+                }
+
+            }
+            else if (otp_type == "forgot_password") {
+                if (otp == undefined) {
+                    return res.status(401).json({
+                        message: "otp not provide"
+                    })
+                }
+                else if (otp.length != 6) {
+                    return res.status(401).json({
+                        message: "Otp must be 6 letter"
+                    })
+                }
+                else {
+                    jWT.verify(authorization, secret_key, async (error, decode) => {
+                        if (error) {
+                            return res.status(400).json({
+                                message: "invalid token"
+                            })
+                        }
+                        else {
+
+                            var userFind = await authModel.findById(decode.user_id)
+                            if (userFind != null) {
+                                if (userFind.otp == otp) {
+                                    return res.status(200).json({
+                                        message: "verify Otp for change password",
+                                        // data:decode
+                                    })
+
+                                }
+                                else {
+                                    return res.status(400).json({
+                                        message: "invalid otp",
+                                        data: decode
+                                    })
+
+                                }
+
+                            }
+                            else {
+                                return res.status(404).json({
+                                    message: "user not found",
+                                    data: decode
+                                })
+                            }
+
+                        }
+
+                    })
+
+                }
+
+            }
         }
         else {
-            if (otp == undefined) {
-                return res.status(401).json({
-                    message: "otp not provide"
-                })
-            }
-            else if (otp.length != 6) {
-                return res.status(401).json({
-                    message: "Otp must be 6 letter"
-                })
-            }
-            else {
-                jWT.verify(authorization, secret_key, async (err, decode) => {
-                    if (err) {
-                        return res.status(401).json({
-                            message: "unauthorization"
-                        })
-                    }
-                    console.log(decode)
-                    req.userid = decode.user_id
-                    var userFind = await userModel.findById(req.userid)
-                    console.log(userFind)
-                    if (userFind.otp == otp) {
-                        await userFind.updateOne({
-                            isVerify: true
-                        })
-                        const token = jWT.sign({ user_id: req.userid }, secret_key, { expiresIn: "2h" })
-                        return res.status(200).json({
-                            message: "verify otp ",
-                            token
-                        })
-                    }
-                    else {
-                        return res.status(401).json({
-                            message: "invalid otp"
-                        })
-                    }
-
-                })
-            }
+            return res.status(200).json({
+                message: "otp type required[verify_Account,forgot_password]",
+                // data:decode
+            })
         }
 
 
 
     }
-    catch (e) {
-        return res.status(500).json({
-            message: "Internal server error",
-            error: e
-        });
 
 
-    }
+
+    // }
+    // catch (e) {
+    //     return res.status(500).json({
+    //         message: "Internal server error",
+    //         error: e
+    //     });
+
+
+    // }
 
 }
 
@@ -239,58 +272,58 @@ exports.completeProfile = async (req, res) => {
 
 exports.login = async (req, res) => {
 
-        let { body } = req
-        var { email, password } = body
-        if (email == undefined || password == undefined) {
-            return res.status(409).json({
-                message: "Enter All Required Field (Email,Password)",
-                status: false
-            });
-        }
-        else {
-            var checkEmail = await authModel.findOne({ email,password }).populate("profileId")
-            if (checkEmail) {
-                var checkpassword =await  bcrypt.compare(password,checkEmail.password)
-                console.log(checkpassword)
-                if(checkpassword){
-                    if(checkEmail.isVerify==false){
-                        return res.status(200).json({
-                            message: "plz verify your account",
-                            data: checkEmail
-                        });
-    
-                    }
-                    else{
-                        return res.status(200).json({
-                            message: "get user",
-                            data: checkEmail
-                        });  
-                    }
-                    
+    let { body } = req
+    var { email, password } = body
+    if (email == undefined || password == undefined) {
+        return res.status(409).json({
+            message: "Enter All Required Field (Email,Password)",
+            status: false
+        });
+    }
+    else {
+        var checkEmail = await authModel.findOne({ email, password }).populate("profileId")
+        if (checkEmail) {
+            var checkpassword = await bcrypt.compare(password, checkEmail.password)
+            console.log(checkpassword)
+            if (checkpassword) {
+                if (checkEmail.isVerify == false) {
+                    return res.status(200).json({
+                        message: "plz verify your account",
+                        data: checkEmail
+                    });
+
                 }
-                else{
-                    return res.status(400).json({
-                        message: "Incorrect password",
-                        // data: checkEmail
+                else {
+                    return res.status(200).json({
+                        message: "get user",
+                        data: checkEmail
                     });
                 }
-                
 
             }
-            else{
-                return res.status(404).json({
-                    message: "user not found",
-                    
+            else {
+                return res.status(400).json({
+                    message: "Incorrect password",
+                    // data: checkEmail
                 });
             }
 
 
         }
+        else {
+            return res.status(404).json({
+                message: "user not found",
+
+            });
+        }
 
 
-        // console.log(req.body)
+    }
 
-        res.send("Hello test")
+
+    // console.log(req.body)
+
+    res.send("Hello test")
     // }
     // catch (e) {
     //     return res.status(500).json({
@@ -299,6 +332,66 @@ exports.login = async (req, res) => {
     //     });
 
     // }
+}
+
+exports.fortgotPasssword = async (req, res) => {
+    try {
+        const { body } = req
+        const { email } = body
+        if (email == undefined || email.length == 0) {
+            return res.status(400).json({
+                message: "email required",
+
+            })
+
+        }
+        else {
+            let userFind = await authModel.findOne({ email })
+            console.log(userFind)
+
+            if (userFind == null) {
+                return res.status(404).json({
+                    message: "user not found",
+
+                })
+            }
+            else {
+                const otp = Math.floor(Math.random() * 900000)
+
+                sendEmail("forgot Password Mail", email, otp)
+                await userFind.updateOne({ otp })
+
+                const token = jWT.sign({ user_id: userFind._id }, secret_key, { expiresIn: "2h" })
+
+
+
+                return res.status(200).json({
+                    message: "get Data",
+                    data: userFind,
+                    token
+
+
+                })
+            }
+
+        }
+
+
+
+
+    }
+    catch (e) {
+        return res.status(400).json({
+            message: "error",
+            error: e
+
+
+
+        })
+
+    }
+
+
 }
 
 
