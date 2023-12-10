@@ -6,6 +6,7 @@ var bodyParser = require('body-parser') //backend data (json)
 const mainRouter = require("./Router/mainRouter")
 const mongoose = require("mongoose")
 require("dotenv").config() //ENV =>SMTP=>PORT 
+const cors=require("cors");
 
 const dbUrl = process.env.ConnectString
 mongoose.connect(dbUrl)
@@ -20,6 +21,13 @@ db.on("error",()=>{
     console.log("connect error ")
 })
 
+const corsOptions ={
+   origin:'*', 
+   credentials:true,            //access-control-allow-credentials:true
+   optionSuccessStatus:200,
+}
+
+app.use(cors(corsOptions))
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())

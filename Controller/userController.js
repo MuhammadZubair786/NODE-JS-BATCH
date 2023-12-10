@@ -27,7 +27,7 @@ exports.userCreate = async (req, res) => {
         else {
             const hashPassword = await bcrypt.hash(password, 12)
 
-            const otp = Math.floor(Math.random() * 900000)
+            const otp = Math.floor(100000 + Math.random() * 900000)
 
             req.body.password = hashPassword
             req.body.otp = otp
@@ -275,13 +275,24 @@ exports.login = async (req, res) => {
     let { body } = req
     var { email, password } = body
     if (email == undefined || password == undefined) {
-        return res.status(409).json({
+        return res.status(200).json({
             message: "Enter All Required Field (Email,Password)",
             status: false
         });
     }
     else {
-        var checkEmail = await authModel.findOne({ email, password }).populate("profileId")
+        var checkEmail = await authModel.findOne({ email }).populate({
+           path:"profileId",
+           populate:{
+            path :"authId",
+            populate:{
+                path:"profileId"
+            }
+           
+        }
+    }
+        )
+
         if (checkEmail) {
             var checkpassword = await bcrypt.compare(password, checkEmail.password)
             console.log(checkpassword)
