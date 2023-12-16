@@ -40,7 +40,7 @@ exports.userCreate = async (req, res) => {
             const token = jWT.sign({ user_id: user._id }, secret_key, { expiresIn: "2h" })
             sendEmail("create Account", email, otp)
             return res.status(201).json({
-                message: "User Crteated ",
+                message: "User Created",
                 data: user,
                 token
             })
@@ -97,7 +97,7 @@ exports.verifyOtp = async (req, res) => {
                             })
                             const token = jWT.sign({ user_id: req.userid }, secret_key, { expiresIn: "2h" })
                             return res.status(200).json({
-                                message: "verify otp ",
+                                message: "verify otp",
                                 token
                             })
                         }
@@ -112,11 +112,13 @@ exports.verifyOtp = async (req, res) => {
 
             }
             else if (otp_type == "forgot_password") {
+            
                 if (otp == undefined) {
                     return res.status(401).json({
                         message: "otp not provide"
                     })
                 }
+
                 else if (otp.length != 6) {
                     return res.status(401).json({
                         message: "Otp must be 6 letter"
