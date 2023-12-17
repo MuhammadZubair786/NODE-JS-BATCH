@@ -307,9 +307,11 @@ exports.login = async (req, res) => {
 
                 }
                 else {
+                    const token = jWT.sign({ user_id: checkpassword._id,type:"user" }, secret_key, { expiresIn: "2h" })
                     return res.status(200).json({
                         message: "get user",
-                        data: checkEmail
+                        data: checkEmail,
+                        token
                     });
                 }
 

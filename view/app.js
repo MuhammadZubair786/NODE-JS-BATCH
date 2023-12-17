@@ -16,7 +16,7 @@ function submit() {
     myHeaders.append("Content-Type", "application/json");
 
     var raw = JSON.stringify({
-        "email": "newp@yopmail.com",
+        "email": "newp24242@yopmail.com",
         "password": "12312312",
         "name": "test12345",
         "userType": userType.value
