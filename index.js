@@ -1,5 +1,5 @@
-const exp = require("express")
-const app = exp()
+// const exp = require("express")
+// const app = exp()
 const port = 5000 //assign 
 var bodyParser = require('body-parser') //backend data (json)
 // const formData = require('express-form-data'); //
@@ -7,6 +7,8 @@ const mainRouter = require("./Router/mainRouter")
 const mongoose = require("mongoose")
 require("dotenv").config() //ENV =>SMTP=>PORT 
 const cors=require("cors");
+
+const { app,server,Io } = require("./socket");
 
 const dbUrl = process.env.ConnectString
 mongoose.connect(dbUrl)
@@ -34,6 +36,8 @@ app.use(bodyParser.json())
 app.use(mainRouter) //ROUTER
 
 //port assign 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log("Node js Listen on this port ", port)
 })
+
+// module.exports = app

@@ -1,4 +1,5 @@
 const authModel = require("../Model/authModel")
+const profileModel = require("../Model/profileModel")
 const userValidate = require("../Validator/validateUser")
 const secret_key = process.env.secret_key
 const jWT = require("jsonwebtoken")
@@ -60,7 +61,7 @@ exports.login = async (req, res) => {
 
 
             if (passwordCheck != null) {
-                const token = jWT.sign({ user_id: passwordCheck._id, type: "admin" }, secret_key, { expiresIn: "2h" })
+                const token = jWT.sign({ user_id: findemail._id }, secret_key, { expiresIn: "2h" })
                 return res.status(200).json({
                     message: "admin login",
                     data: passwordCheck,
@@ -127,16 +128,16 @@ exports.getAllUser = async (req, res) => {
 
                     return res.status(401).json({
                         message: "result",
-                        data:result
+                        data: result
                     })
 
 
                 }
-                else{
+                else {
                     return res.status(401).json({
                         message: "please login as admin andf then ",
-                        data:result
-                    })  
+                        data: result
+                    })
                 }
 
                 // req.userid = decode.user_id
@@ -154,4 +155,70 @@ exports.getAllUser = async (req, res) => {
             e
         })
     }
+}
+
+
+exports.getProfile = async (req, res) => {
+    
+
+        let checkAdmin = await authModel.findById(req.userId)
+      
+        if(checkAdmin.userType=="admin"){
+            let getAllUser = await authModel.find({})
+            return res.status(200).json({
+                message: "get all user ",
+                data:getAllUser        
+            })
+
+        }
+           return res.status(401).json({
+            message: "plz login as admin",
+             
+        })
+        
+      
+    // }
+    // catch (e) {
+    //     return res.status(401).json({
+    //         message: "error",
+    //         e
+    //     })
+    // }
+}
+
+
+exports.deleteUser = async(req,res)=>{
+    // try{
+        console.log(req.userId)
+        let checkAdmin = await authModel.find({_id:req.userId,userType:"admin"})
+        console.log(checkAdmin.length)
+        if(checkAdmin.length>0){
+
+            let deleteUser = await authModel.findByIdAndDelete(req.query.id)
+            console.log(deleteUser)
+            if(deleteUser.completeProfile){
+                let deleteProfile = await profileModel.findByIdAndDelete(deleteUser.profileId)
+                return res.status(200).json({
+                    message: "user delete an dprofile successfully",
+                })
+
+            }
+            return res.status(200).json({
+                message: "user delete successfully",
+            })
+
+        }
+        return res.status(200).json({
+            message: "plz login as admin",
+        }) 
+
+
+        
+    // }
+    // catch(e){
+    //     return res.status(401).json({
+    //         message: "plz login as admin",
+    //     })
+
+    // }
 }

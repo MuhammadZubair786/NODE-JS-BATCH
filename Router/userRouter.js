@@ -3,6 +3,7 @@ const userValidate = require("../Validator/validateUser")
 const router = exp.Router()
 const userController = require('../Controller/userController')
 const multer = require("multer")
+const MiddleWare=require("./authMedialWare")
 
 //for store image in uploads folders
 const storage = multer.diskStorage({
@@ -24,6 +25,8 @@ router.post("/complete-profile",upload.single("Image"),userController.completePr
 
 router.post("/forgot-password",userController.fortgotPasssword)
 router.post("/login",userController.login )
+router.get("/getprofile",MiddleWare.authMedialWare,userController.getProfile)
+// router.get("/getprofile",)
 
 
 

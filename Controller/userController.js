@@ -8,6 +8,8 @@ const profileValidate = require("../Validator/validateProfile");
 const profileModel = require("../Model/profileModel");
 const authModel = require("../Model/authModel");
 const { sendEmail } = require("../constants/sendEmailOtp");
+const {io} = require("../socket")
+
 
 const secret_key = process.env.secret_key
 
@@ -39,6 +41,17 @@ exports.userCreate = async (req, res) => {
 
             const token = jWT.sign({ user_id: user._id }, secret_key, { expiresIn: "2h" })
             sendEmail("create Account", email, otp)
+
+            io.emit("Admin",user)
+
+            // user=>create=>backend
+            // backedn=>admin
+
+            // io.on("admin")
+
+            // admin pane=>
+
+
             return res.status(201).json({
                 message: "User Created",
                 data: user,
@@ -307,7 +320,7 @@ exports.login = async (req, res) => {
 
                 }
                 else {
-                    const token = jWT.sign({ user_id: checkpassword._id,type:"user" }, secret_key, { expiresIn: "2h" })
+                    const token = jWT.sign({ user_id: checkEmail._id }, secret_key, { expiresIn: "2h" })
                     return res.status(200).json({
                         message: "get user",
                         data: checkEmail,
@@ -407,6 +420,33 @@ exports.fortgotPasssword = async (req, res) => {
     }
 
 
+}
+
+
+exports.getProfile = async (req, res) => {
+    
+    console.log(req.userId)
+    let checkUser = await authModel.findById(req.userId).populate("profileId")
+    console.log(checkUser)
+    if(checkUser.userType=="user"){
+       
+        return res.status(401).json({
+            message: "get  user ",
+            data: checkUser        
+        })
+
+    }
+      
+
+    
+  
+// }
+// catch (e) {
+//     return res.status(401).json({
+//         message: "error",
+//         e
+//     })
+// }
 }
 
 
